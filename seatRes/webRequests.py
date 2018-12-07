@@ -9,6 +9,7 @@ def reserve(username, password, seat, start, end):
     log_in(username, password, cookie, token_login)
     token_res = get_login_page(cookie)
     res_id = make_res(cookie, token_res, seat, start, end)
+    log_out(cookie)
     return res_id
 
 
@@ -17,6 +18,7 @@ def cancel(username, password, seat_id):
     cookie, token_login = get_cookie()
     log_in(username, password, cookie, token_login)
     cancel_res(cookie, seat_id)
+    log_out(cookie)
 
 
 def get_cookie():
@@ -143,5 +145,22 @@ def cancel_res(cookie, seat_id):
                'Accept-Encoding': 'gzip, deflate, br',
                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
                'Cookie': cookie}
-    r = requests.get('https://seat.lib.whu.edu.cn/reservation/cancel/'+seat_id, headers=headers, verify=False, allow_redirects=False)
+    r = requests.get('https://seat.lib.whu.edu.cn/reservation/cancel/'+seat_id,
+                     headers=headers, verify=False, allow_redirects=False)
+    print('code: ', r.status_code)
+
+
+def log_out(cookie):
+    print('===log out===')
+    headers = {'Host': 'seat.lib.whu.edu.cn',
+               'Connection': 'keep-alive',
+               'Upgrade-Insecure-Requests': '1',
+               'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) '
+                             'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
+               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+               'Referer': 'https://seat.lib.whu.edu.cn/login?targetUri=%2F',
+               'Accept-Encoding': 'gzip, deflate, br',
+               'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+               'Cookie': cookie}
+    r = requests.get('https://seat.lib.whu.edu.cn/logout', headers=headers, verify=False, allow_redirects=False)
     print('code: ', r.status_code)
