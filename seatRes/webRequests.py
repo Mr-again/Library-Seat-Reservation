@@ -6,19 +6,47 @@ from urllib import parse
 def reserve(username, password, seat, start, end):
     print('!!!!!!!!reserve my seat!!!!!!!!')
     cookie, token_login = get_cookie()
-    log_in(username, password, cookie, token_login)
+    if cookie is None or token_login is None:
+        print('reserve fail bcz get_cookie')
+        return None
+    res1 = log_in(username, password, cookie, token_login)
+    if res1 is None or res1 is False:
+        print('reserve fail bcz log_in')
+        return None
     token_res = get_login_page(cookie)
+    if token_res is None:
+        print('reserve fail bcz get_login_page')
+        return None
     res_id = make_res(cookie, token_res, seat, start, end)
-    log_out(cookie)
+    if res_id is None:
+        print('reserve fail bcz make_res')
+        return None
+    res2 = log_out(cookie)
+    if res2 is None or res2 is False:
+        print('reserve success but log_out fail')
+    print('reserve success')
     return res_id
 
 
 def cancel(username, password, seat_id):
     print('!!!!!!!!cancel my seat!!!!!!!!')
     cookie, token_login = get_cookie()
-    log_in(username, password, cookie, token_login)
-    cancel_res(cookie, seat_id)
-    log_out(cookie)
+    if cookie is None or token_login is None:
+        print('cancel fail bcz get_cookie')
+        return None
+    res1 = log_in(username, password, cookie, token_login)
+    if res1 is None or res1 is False:
+        print('cancel fail bcz log_in')
+        return None
+    res2 = cancel_res(cookie, seat_id)
+    if res2 is None or res2 is False:
+        print('cancel fail bcz cancel_res')
+        return None
+    res3 = log_out(cookie)
+    if res3 is None or res3 is False:
+        print('cancel success bcz cancel_res')
+    print('cancel success')
+    return True
 
 
 def get_cookie():
@@ -33,8 +61,14 @@ def get_cookie():
                'Referer': 'https://seat.lib.whu.edu.cn/selfRes',
                'Accept-Encoding': 'gzip, deflate, br',
                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'}
-    r = requests.get('https://seat.lib.whu.edu.cn/login?targetUri=%2F', verify=False, headers=headers)
-    print('code: ', r.status_code)
+    try:
+        r = requests.get('https://seat.lib.whu.edu.cn/login?targetUri=%2F', verify=False, headers=headers)
+    except requests.exceptions as e:
+        print(e)
+        return None, None
+    if r.status_code != 200:
+        print('http-code is not 200')
+        return None, None
     cookie = r.headers.get('Set-Cookie').split(';')[0]
     print('cookie: '+cookie)
     token = etree.HTML(r.text).xpath("//input[@id='SYNCHRONIZER_TOKEN']/@value")[0]
@@ -65,14 +99,20 @@ def log_in(username, password, cookie, token):
             'authid': '-1',
             'appId': 'a3a5c1faff9e41c2b2447a52c5bd7ea0',
             'appAuthKey': 'a109981dd38540d5b20b4af760d7f6f1'}
-    r = requests.post('https://seat.lib.whu.edu.cn/auth/signIn', data=parse.urlencode(data),
-                      headers=headers, verify=False, allow_redirects=False)
-    print('code: ', r.status_code)
+    try:
+        r = requests.post('https://seat.lib.whu.edu.cn/auth/signIn', data=parse.urlencode(data),
+                          headers=headers, verify=False, allow_redirects=False)
+    except requests.exceptions as e:
+        print(e)
+        return None
+    if r.status_code != 302:
+        print('http-code is not 302')
+        return None
     if r.headers['Location'] == 'https://seat.lib.whu.edu.cn/':
-        print('Login success')
+        print('log_in success')
         return True
     else:
-        print('Login fail')
+        print('log_in fail')
         return False
 
 
@@ -89,7 +129,14 @@ def get_login_page(cookie):
                'Accept-Encoding': 'gzip, deflate, br',
                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
                'Cookie': cookie}
-    r = requests.get('https://seat.lib.whu.edu.cn/', headers=headers, verify=False)
+    try:
+        r = requests.get('https://seat.lib.whu.edu.cn/', headers=headers, verify=False)
+    except requests.exceptions as e:
+        print(e)
+        return None
+    if r.status_code != 200:
+        print('http-code is not 200')
+        return None
     token = etree.HTML(r.text).xpath("//input[@id='SYNCHRONIZER_TOKEN']/@value")[0]
     print('SYNCHRONIZER_TOKEN: ' + token)
     return token
@@ -119,13 +166,19 @@ def make_res(cookie, token, seat, start, end):
             'authid': '-1',
             'appId': 'a3a5c1faff9e41c2b2447a52c5bd7ea0',
             'appAuthKey': 'a109981dd38540d5b20b4af760d7f6f1'}
-    r = requests.post('https://seat.lib.whu.edu.cn/selfRes', verify=False, headers=headers, data=data)
-    print('code: ', r.status_code)
+    try:
+        r = requests.post('https://seat.lib.whu.edu.cn/selfRes', verify=False, headers=headers, data=data)
+    except requests.exceptions as e:
+        print(e)
+        return None
+    if r.status_code != 200:
+        print('http-code is not 200')
+        return None
     seq_id = etree.HTML(r.text).xpath("//dd/text()")[0]
     if len(seq_id) != 10:
-        print('res fail')
+        print('make_res fail')
         return None
-    res_id = '47'+seq_id.split('-')[2]+'3'+seq_id.split('-')[1]
+    res_id = '47'+seq_id.split('-')[2]+'-'+seq_id.split('-')[1]
     print(res_id)
     return res_id
 
@@ -145,9 +198,18 @@ def cancel_res(cookie, seat_id):
                'Accept-Encoding': 'gzip, deflate, br',
                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
                'Cookie': cookie}
-    r = requests.get('https://seat.lib.whu.edu.cn/reservation/cancel/'+seat_id,
-                     headers=headers, verify=False, allow_redirects=False)
-    print('code: ', r.status_code)
+    for i in range(10):
+        try:
+            r = requests.get('https://seat.lib.whu.edu.cn/reservation/cancel/'+seat_id.replace('-', str(i)),
+                             headers=headers, verify=False, allow_redirects=False)
+        except requests.exceptions as e:
+            print(e)
+            return None
+        if r.status_code != 302:
+            print('http-code is not 302')
+            return None
+    print('cancel_res success')
+    return True
 
 
 def log_out(cookie):
@@ -162,5 +224,13 @@ def log_out(cookie):
                'Accept-Encoding': 'gzip, deflate, br',
                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
                'Cookie': cookie}
-    r = requests.get('https://seat.lib.whu.edu.cn/logout', headers=headers, verify=False, allow_redirects=False)
-    print('code: ', r.status_code)
+    try:
+        r = requests.get('https://seat.lib.whu.edu.cn/logout', headers=headers, verify=False, allow_redirects=False)
+    except requests.exceptions as e:
+        print(e)
+        return None
+    if r.status_code != 302:
+        print('http-code is not 302')
+        return None
+    print("log_out success")
+    return True
