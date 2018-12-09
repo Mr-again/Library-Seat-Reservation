@@ -2,14 +2,15 @@ from datetime import datetime
 from seatRes import webRequests
 import multiprocessing
 import warnings
+import time
 
 
-result = None
+result = {}
 
 
 def check_time():
     cur_time = datetime.now()
-    des_time = cur_time.replace(hour=14, minute=50, second=0, microsecond=0)
+    des_time = cur_time.replace(hour=16, minute=9, second=0, microsecond=0)
     delta = des_time-cur_time
     skip_seconds = int(delta.total_seconds())
     if skip_seconds == 0:
@@ -28,7 +29,12 @@ def snatch_seat(lock, username, password, seat):
                     print('预约成功!res_id为:'+res_id+',time = '+str(datetime.now()))
                     if res_id is not None:
                         lock.acquire()
-                        result = res_id
+                        print('1111111')
+                        result[username] = {'res_id': res_id,
+                                            'password': password,
+                                            'seat_id': seat,
+                                            'start': 1290,
+                                            'end': 1350}
                         lock.release()
                         print('预约序列存储成功!')
                     return True
@@ -46,4 +52,7 @@ def multi_snatch(username, password, seat):
 
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
-    multi_snatch('xxx', 'xxx', 2659)
+    multi_snatch('2015301500271', '036095', 12333)
+    while True:
+        print(result)
+        time.sleep(0.1)

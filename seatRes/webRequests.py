@@ -28,7 +28,7 @@ def reserve(username, password, seat, start, end):
     return res_id
 
 
-def cancel(username, password, seat_id):
+def cancel(username, password, res_id):
     print('!!!!!!!!cancel my seat!!!!!!!!')
     cookie, token_login = get_cookie()
     if cookie is None or token_login is None:
@@ -38,7 +38,7 @@ def cancel(username, password, seat_id):
     if res1 is None or res1 is False:
         print('cancel fail bcz log_in')
         return None
-    res2 = cancel_res(cookie, seat_id)
+    res2 = cancel_res(cookie, res_id)
     if res2 is None or res2 is False:
         print('cancel fail bcz cancel_res')
         return None
@@ -183,9 +183,9 @@ def make_res(cookie, token, seat, start, end):
     return res_id
 
 
-def cancel_res(cookie, seat_id):
+def cancel_res(cookie, res_id):
     print('===cancel res===')
-    if seat_id is None:
+    if res_id is None:
         print('no seat to cancel')
         return
     headers = {'Host': 'seat.lib.whu.edu.cn',
@@ -200,7 +200,7 @@ def cancel_res(cookie, seat_id):
                'Cookie': cookie}
     for i in range(10):
         try:
-            r = requests.get('https://seat.lib.whu.edu.cn/reservation/cancel/'+seat_id.replace('-', str(i)),
+            r = requests.get('https://seat.lib.whu.edu.cn/reservation/cancel/'+res_id.replace('-', str(i)),
                              headers=headers, verify=False, allow_redirects=False)
         except requests.exceptions as e:
             print(e)
