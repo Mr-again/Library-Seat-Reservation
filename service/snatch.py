@@ -46,4 +46,4 @@ def multi_snatch(username, password, seat):
 
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
-    multi_snatch('2015301500270', '178511', 2659)
+    multi_snatch('xxx', 'xxx', 2659)
