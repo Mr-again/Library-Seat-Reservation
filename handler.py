@@ -1,4 +1,3 @@
-from seatRes import webRequests
 from service import snatch
 import warnings
 
@@ -9,3 +8,4 @@ if __name__ == '__main__':
     # if seat_id is not None:
     #     webRequests.cancel('xxx', 'xxx', seat_id)
     snatch.snatch_seat('xxx', 'xxx', 2659)
+
