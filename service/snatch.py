@@ -43,6 +43,7 @@ def multi_snatch(res, username, password, seat):
         p = multiprocessing.Process(target=snatch_seat, args=(res, lock, username, password, seat))
         p.daemon = False
         p.start()
+        # TODO How to use join here
 
 
 if __name__ == '__main__':
