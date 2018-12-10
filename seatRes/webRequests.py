@@ -1,9 +1,10 @@
 import requests
 from lxml import etree
 from urllib import parse
+import datetime
 
 
-def reserve(username, password, seat, start, end):
+def reserve(username, password, seat, start, end, date_flag):
     print('!!!!!!!!reserve my seat!!!!!!!!')
     cookie, token_login = get_cookie()
     if cookie is None or token_login is None:
@@ -17,7 +18,7 @@ def reserve(username, password, seat, start, end):
     if token_res is None:
         print('reserve fail bcz get_login_page')
         return None
-    res_id = make_res(cookie, token_res, seat, start, end)
+    res_id = make_res(cookie, token_res, seat, start, end, date_flag)
     if res_id is None:
         print('reserve fail bcz make_res')
         return None
@@ -142,7 +143,7 @@ def get_login_page(cookie):
     return token
 
 
-def make_res(cookie, token, seat, start, end):
+def make_res(cookie, token, seat, start, end, date_flag):
     headers = {'Host': 'seat.lib.whu.edu.cn',
                'Connection': 'keep-alive',
                'Content-Length': '203',
@@ -157,9 +158,14 @@ def make_res(cookie, token, seat, start, end):
                'Accept-Encoding': 'gzip, deflate, br',
                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
                'Cookie': cookie}
+    if date_flag is False:
+        tomorrow = ''
+    else:
+        tomorrow_time = datetime.datetime.now() + datetime.timedelta(days=1)
+        tomorrow = str(tomorrow_time.date())
     data = {'SYNCHRONIZER_TOKEN': token,
             'SYNCHRONIZER_URI': '/',
-            'date': '',
+            'date': tomorrow,
             'seat': str(seat),
             'start': str(start),
             'end': str(end),
